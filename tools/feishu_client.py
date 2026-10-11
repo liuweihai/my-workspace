@@ -1,10 +1,12 @@
 """
-飞书知识库自动同步工具
-支持创建知识库文档节点并解析写入 Markdown 内容
+飞书知识库自动同步与通知工具
+功能：
+1. 创建知识库文档节点并解析写入 Markdown 内容
+2. 同步完成后自动向用户发送飞书卡片/富文本通知
 """
 import os
 import sys
-import re
+import json
 from typing import Dict, Any, List, Optional
 import requests
 
@@ -15,6 +17,8 @@ class FeishuWikiSync:
         self.app_id = self.env_vars.get("FEISHU_APP_ID", "")
         self.app_secret = self.env_vars.get("FEISHU_APP_SECRET", "")
         self.space_id = self.env_vars.get("FEISHU_SPACE_ID", "")
+        self.user_open_id = self.env_vars.get("FEISHU_USER_OPEN_ID", "")
+        self.webhook_url = self.env_vars.get("FEISHU_WEBHOOK_URL", "")
         self.token: Optional[str] = None
 
         if not self.app_id or not self.app_secret:
@@ -78,7 +82,6 @@ class FeishuWikiSync:
         code_lines: List[str] = []
 
         for line in lines:
-            # 处理代码块
             if line.strip().startswith("```"):
                 if not in_code_block:
                     in_code_block = True
@@ -103,7 +106,6 @@ class FeishuWikiSync:
             if not stripped:
                 continue
 
-            # 标题处理
             if stripped.startswith("### "):
                 blocks.append({
                     "block_type": 5, # Heading 3
@@ -146,13 +148,12 @@ class FeishuWikiSync:
             "Content-Type": "application/json; charset=utf-8"
         }
 
-        # 飞书限制每次追加最多 50 个 block
         batch_size = 50
         for i in range(0, len(blocks), batch_size):
             batch = blocks[i:i + batch_size]
             payload = {
                 "children": batch,
-                "index": -1 # 追加到末尾
+                "index": -1
             }
             res = requests.post(url, headers=headers, json=payload, timeout=15)
             res.raise_for_status()
@@ -160,8 +161,70 @@ class FeishuWikiSync:
             if data.get("code") != 0:
                 raise RuntimeError(f"写入文档内容失败: {data.get('msg')}")
 
-    def save_markdown_to_wiki(self, title: str, markdown_content: str) -> Dict[str, str]:
-        """一键将 Markdown 内容保存为飞书知识库文档"""
+    def send_notification(self, title: str, doc_url: str) -> bool:
+        """向用户飞书发送文档沉淀通知"""
+        # 1. 优先使用应用单聊私信通知
+        if self.user_open_id:
+            try:
+                token = self.get_token()
+                url = f"{self.base_url}/im/v1/messages?receive_id_type=open_id"
+                headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"}
+                content = {
+                    "zh_cn": {
+                        "title": f"📑 知识库沉淀完成：{title}",
+                        "content": [
+                            [
+                                {"tag": "text", "text": "文档已自动整理并同步至飞书知识库空间。\n\n"},
+                                {"tag": "a", "text": "🔗 点击在飞书中查看全文", "href": doc_url}
+                            ]
+                        ]
+                    }
+                }
+                payload = {
+                    "receive_id": self.user_open_id,
+                    "msg_type": "post",
+                    "content": json.dumps(content)
+                }
+                res = requests.post(url, headers=headers, json=payload, timeout=10)
+                data = res.json()
+                if data.get("code") == 0:
+                    print("🔔 已成功向您的飞书私信推送通知！")
+                    return True
+                else:
+                    print(f"⚠️ 私信通知未能直达 ({data.get('msg')})")
+            except Exception as e:
+                print(f"⚠️ 发送私信通知异常: {e}")
+
+        # 2. 如果配置了 Webhook，则调用 Webhook 发送
+        if self.webhook_url:
+            try:
+                wb_payload = {
+                    "msg_type": "post",
+                    "content": {
+                        "post": {
+                            "zh_cn": {
+                                "title": f"📑 知识库沉淀完成：{title}",
+                                "content": [
+                                    [
+                                        {"tag": "text", "text": "文档已同步至知识库：\n"},
+                                        {"tag": "a", "text": title, "href": doc_url}
+                                    ]
+                                ]
+                            }
+                        }
+                    }
+                }
+                res = requests.post(self.webhook_url, json=wb_payload, timeout=10)
+                if res.status_code == 200:
+                    print("🔔 已通过 Webhook 推送群通知！")
+                    return True
+            except Exception as e:
+                print(f"⚠️ Webhook 通知异常: {e}")
+
+        return False
+
+    def save_markdown_to_wiki(self, title: str, markdown_content: str, notify: bool = True) -> Dict[str, str]:
+        """一键将 Markdown 内容保存为飞书知识库文档并触发通知"""
         print(f"正在创建飞书知识库节点: {title} ...")
         node = self.create_wiki_document(title)
         node_url = node.get("url", "")
@@ -173,6 +236,10 @@ class FeishuWikiSync:
             self.append_document_blocks(obj_token, blocks)
 
         print(f"✅ 保存成功！文档链接: {node_url}")
+        
+        if notify:
+            self.send_notification(title, node_url)
+
         return {"title": title, "url": node_url, "doc_id": obj_token}
 
 if __name__ == "__main__":
