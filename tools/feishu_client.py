@@ -282,21 +282,37 @@ class FeishuWikiSync:
     def save_markdown_to_wiki(self, title: str, markdown_content: str, category: str = "", notify: bool = True) -> Dict[str, str]:
         """
         一键将 Markdown 内容保存为飞书知识库文档并触发通知
+        【防重机制】：如果同目录下已存在同名文档，自动更新该文档，避免反复创建重复文件！
         :param title: 文档标题
         :param markdown_content: Markdown 正文文本
-        :param category: 分类目录名（如 "项目技术规范"、"自动化运行报告"、"学习研究" 等），留空则放在根目录
-        :param notify: 是否在成功后发送飞书私信通知
+        :param category: 分类目录名（如 "项目技术规范"、"自动化运行报告" 等）
+        :param notify: 是否发送飞书私信通知
         """
         parent_token = ""
         if category:
             parent_token = self.get_or_create_category_folder(category)
 
         target_dir_desc = f"目录 [{category}]" if category else "根目录"
-        print(f"正在向飞书知识库 {target_dir_desc} 创建文档: {title} ...")
-        node = self.create_wiki_document(title, parent_node_token=parent_token)
-        node_url = node.get("url", "")
-        obj_token = node.get("obj_token", "")
 
+        # 1. 检查目标目录下是否已存在同名文档（防重复机制）
+        existing_nodes = self.list_nodes(parent_node_token=parent_token)
+        target_node = None
+        for node in existing_nodes:
+            if node.get("title") == title:
+                target_node = node
+                break
+
+        if target_node:
+            print(f"🔄 检测到已存在同名文档 [{title}]，正在更新该文档...")
+            node_url = target_node.get("url", "")
+            obj_token = target_node.get("obj_token", "")
+        else:
+            print(f"📄 正在向飞书知识库 {target_dir_desc} 创建新文档: {title} ...")
+            node = self.create_wiki_document(title, parent_node_token=parent_token)
+            node_url = node.get("url", "")
+            obj_token = node.get("obj_token", "")
+
+        # 2. 转换并写入正文
         print("正在转换并写入文档内容...")
         blocks = self.markdown_to_blocks(markdown_content)
         if blocks:
