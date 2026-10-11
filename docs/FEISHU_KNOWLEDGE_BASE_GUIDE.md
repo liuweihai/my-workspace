@@ -1,6 +1,8 @@
-# 飞书知识库自动化沉淀与多 Agent 协同指南
+# 飞书知识库多Agent协同与使用指南
 
-本指南供 **用户本人** 以及 **任何 AI Agent（如 Antigravity、Claude Code、Cursor、Devin 等）** 查阅与遵循。
+> **本文档定位与作用**：详细指导开发者和各类 AI Agent（如 Claude Code / Cursor / Codex 等）如何使用现成脚本将产出文档一键分类归档至飞书知识库，并说明新电脑初始化步骤与 Mac mini 定时任务配置，确保多设备、多工具协同的一致性。
+
+本指南供 **刘刚本人** 以及 **任何 AI Agent** 查阅与严格遵循。
 
 ---
 

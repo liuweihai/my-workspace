@@ -328,22 +328,35 @@ class FeishuWikiSync:
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("用法:")
-        print("  python3 tools/feishu_client.py <markdown文件路径或文本> [分类目录名]")
+        print("  python3 tools/feishu_client.py <markdown文件路径或文本> [分类目录名] [自定义中文标题]")
         print("示例:")
-        print("  python3 tools/feishu_client.py GEMINI.md \"项目技术规范\"")
+        print("  python3 tools/feishu_client.py GEMINI.md \"项目技术规范\" \"项目全局开发规范\"")
         print("  python3 tools/feishu_client.py daily_report.md \"自动化运行报告\"")
         sys.exit(1)
 
     target = sys.argv[1]
     category = sys.argv[2] if len(sys.argv) > 2 else ""
+    custom_title = sys.argv[3] if len(sys.argv) > 3 else ""
 
     client = FeishuWikiSync()
     if os.path.exists(target):
         with open(target, "r", encoding="utf-8") as f:
             content = f.read()
-        title = os.path.splitext(os.path.basename(target))[0]
+
+        # 优先使用显式指定的中文标题
+        if custom_title:
+            title = custom_title
+        else:
+            # 自动提取 Markdown 第一行的一级标题作为中文标题
+            extracted_title = ""
+            for line in content.split("\n"):
+                stripped = line.strip()
+                if stripped.startswith("# "):
+                    extracted_title = stripped[2:].strip()
+                    break
+            title = extracted_title if extracted_title else os.path.splitext(os.path.basename(target))[0]
     else:
-        title = "快速备忘"
+        title = custom_title if custom_title else "快速备忘"
         content = target
 
     client.save_markdown_to_wiki(title, content, category=category)
