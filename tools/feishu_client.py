@@ -78,33 +78,41 @@ class FeishuWikiSync:
 
     def get_or_create_category_folder(self, folder_name: str) -> str:
         """
-        获取或创建分类文件夹节点
-        如果已存在同名节点，则直接返回其 token；若无则自动在根目录创建
+        获取或创建分类文件夹节点（支持多级目录，例如 "核心业务项目/流媒体同步"）
         """
         if not folder_name:
             return ""
 
-        # 格式化文件夹显示名称
-        display_name = folder_name if folder_name.startswith("📁") else f"📁 {folder_name}"
+        parts = [p.strip() for p in folder_name.replace("\\", "/").split("/") if p.strip()]
+        current_parent_token = ""
 
-        if display_name in self._folder_cache:
-            return self._folder_cache[display_name]
+        for part in parts:
+            display_name = part if part.startswith("📁") else f"📁 {part}"
+            cache_key = f"{current_parent_token}:{display_name}"
 
-        # 检查是否已存在同名根节点
-        existing_nodes = self.list_nodes(parent_node_token="")
-        for node in existing_nodes:
-            title = node.get("title", "")
-            if title == display_name or title == folder_name:
-                token = node.get("node_token", "")
-                self._folder_cache[display_name] = token
-                return token
+            if cache_key in self._folder_cache:
+                current_parent_token = self._folder_cache[cache_key]
+                continue
 
-        # 不存在则新建一个目录节点
-        print(f"📂 正在创建新分类目录节点: {display_name} ...")
-        new_node = self.create_wiki_document(title=display_name, parent_node_token="")
-        token = new_node.get("node_token", "")
-        self._folder_cache[display_name] = token
-        return token
+            # 在当前父节点下查找是否已存在
+            existing_nodes = self.list_nodes(parent_node_token=current_parent_token)
+            found_token = ""
+            for node in existing_nodes:
+                title = node.get("title", "")
+                if title == display_name or title == part:
+                    found_token = node.get("node_token", "")
+                    break
+
+            if found_token:
+                current_parent_token = found_token
+            else:
+                print(f"📂 正在创建新分类目录节点: {display_name} ...")
+                new_node = self.create_wiki_document(title=display_name, parent_node_token=current_parent_token)
+                current_parent_token = new_node.get("node_token", "")
+
+            self._folder_cache[cache_key] = current_parent_token
+
+        return current_parent_token
 
     def create_wiki_document(self, title: str, parent_node_token: str = "") -> Dict[str, Any]:
         """在知识库中创建空白 docx 文档节点（支持指定父级目录）"""
