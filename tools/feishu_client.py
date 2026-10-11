@@ -128,8 +128,8 @@ class FeishuWikiSync:
                 })
             elif stripped.startswith("> "):
                 blocks.append({
-                    "block_type": 17, # Quote
-                    "quote": {"elements": [{"text_run": {"content": stripped[2:]}}]}
+                    "block_type": 2, # Text paragraph with quote marker
+                    "text": {"elements": [{"text_run": {"content": f"💬 {stripped[2:]}"}}]}
                 })
             else:
                 blocks.append({
@@ -156,6 +156,8 @@ class FeishuWikiSync:
                 "index": -1
             }
             res = requests.post(url, headers=headers, json=payload, timeout=15)
+            if res.status_code != 200:
+                print(f"写入文档内容失败: HTTP {res.status_code} -> {res.text}")
             res.raise_for_status()
             data = res.json()
             if data.get("code") != 0:
