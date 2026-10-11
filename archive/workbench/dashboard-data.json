@@ -1,0 +1,88 @@
+{
+  "updatedAt": "2026-10-10T19:54:00+08:00",
+  "stats": {
+    "active": 1,
+    "hold": 2,
+    "done": 2
+  },
+  "projects": [
+    {
+      "id": "wechat-article",
+      "title": "公众号深度长文项目",
+      "status": "active",
+      "statusText": "🔴 重点攻坚中",
+      "progress": 15,
+      "summary": "打造具备深度、高粘性与自媒体审美的公众号深度长文产出链路。",
+      "decision": "当前列为首要攻坚方向。核心痛点是传统 AI 写法太假、缺乏结构化深度。",
+      "nextStep": "调用 project-planner 梳理首期 MVP，挑选 1 个行业选题打样第一篇深度母版。",
+      "artifacts": ["待生成首篇标准样章"]
+    },
+    {
+      "id": "daily-hot-news",
+      "title": "每日热点自媒体自动化",
+      "status": "hold",
+      "statusText": "🟡 搁置待命中",
+      "progress": 90,
+      "summary": "每日早晨 07:00 自动抓取百度/头条热点，输出 28 字、3:2 大字封面、全 Base64 纯净长文。",
+      "decision": "已完成首件高标准打样与 sidecar 任务配置。搁置原因：先理清完整发布流程，暂不开启定时调度，后续随时一键启用。",
+      "nextStep": "待发布闭环理顺后，在 Automations 控制台一键启用 Daily Hot Topics Publisher。",
+      "artifacts": [
+        "远程服务器: output/2026-10-10/买9斤蜜薯仅退款...html",
+        "Google Drive: AI/每日热点/2026-10-10/买9斤蜜薯仅退款...html"
+      ]
+    },
+    {
+      "id": "intranet-access",
+      "title": "Mac mini 网站外网访问",
+      "status": "hold",
+      "statusText": "🟡 搁置待命中",
+      "progress": 80,
+      "summary": "实现外部随时访问内网 Mac mini 部署的多个 Web 服务（OpenClaw 18789、Python 8790 等）。",
+      "decision": "技术方案已完成严格论证与对比，选定最优解为 Tailscale 异地组网（零域名、零成本、P2P 极速直连）。搁置原因：暂无紧急外部访问需求，方案归档备用。",
+      "nextStep": "后续需要时，在 Mac mini 执行一条安装命令，5 分钟即可彻底打通。",
+      "artifacts": ["Tailscale 零域名组网技术方案备忘"]
+    },
+    {
+      "id": "ssh-mcp",
+      "title": "Mac mini 远程 SSH MCP 通道",
+      "status": "done",
+      "statusText": "🟢 已闭环资产",
+      "progress": 100,
+      "summary": "打通专属 my-server SSH MCP 原生工具集，实现对局域网 M4 Mac mini 的全自动零弹窗管理。",
+      "decision": "已完全取代旧的终端沙箱外部调用，彻底根除频繁弹窗确认问题。",
+      "nextStep": "已常驻运行，作为所有远程脚本部署与文件同步的底层支撑通道。",
+      "artifacts": [
+        "my-server MCP 配置 (~/.gemini/config/mcp_config.json)",
+        "远程工具集: remote-ssh, ssh-write-chunk, ssh-read-lines"
+      ]
+    },
+    {
+      "id": "delivery-engine",
+      "title": "通用任务标准化交付引擎",
+      "status": "done",
+      "statusText": "🟢 已闭环资产",
+      "progress": 100,
+      "summary": "确立 5 步标准化交付流水线（探针 ➜ 打样 ➜ 双保险 ➜ 调度 ➜ 验收），并固化去 AI 味核心铁律。",
+      "decision": "作为所有新需求的元工作流标准，杜绝反复无效沟通与假模版。",
+      "nextStep": "后续开启任何新项目时直接激活该技能作为守则。",
+      "artifacts": [
+        ".agents/skills/task-delivery-engine/SKILL.md",
+        ".agents/skills/project-planner/SKILL.md"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "title": "标题 28 字硬约束",
+      "desc": "标题加所有标点严格 ≤ 28 字，文件名与文章首行 h1 必须逐字完全一致，杜绝任何机械腰斩。"
+    },
+    {
+      "title": "彻底去 AI 味准则",
+      "desc": "严禁“多维透视、协同推进、总的来说、不可否认”等公文八股；用真人纪实、具体数字切中痛点。"
+    },
+    {
+      "title": "纯单文件自包含",
+      "desc": "首图 3:2 百家号大字封面，所有配图经由 Base64 深度内嵌，代码彻底零注释，双击离线秒开。"
+    }
+  ]
+}

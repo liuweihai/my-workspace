@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>个人战略总控驾驶舱 · V1.0</title>
+  <style>
+    :root {
+      --bg: #060913;
+      --panel-bg: rgba(10, 16, 30, 0.75);
+      --panel-border: rgba(0, 240, 255, 0.18);
+      --panel-border-hover: rgba(0, 240, 255, 0.45);
+      --card-bg: rgba(15, 23, 42, 0.65);
+      --card-hover: rgba(22, 33, 62, 0.85);
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.25);
+      --blue: #3b82f6;
+      --blue-glow: rgba(59, 130, 246, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --red: #ef4444;
+      --red-glow: rgba(239, 68, 68, 0.3);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #475569;
+      --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.12), transparent 45%),
+        radial-gradient(circle at 100% 100%, rgba(79, 70, 229, 0.08), transparent 40%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* 顶栏 HUD (Master Deck) */
+    header {
+      background: rgba(8, 12, 24, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 居中全息时钟 */
+    .hud-clock-center {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 4px 18px;
+      border-radius: 20px;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.15);
+    }
+
+    .clock-time {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .clock-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      border-left: 1px solid var(--panel-border);
+      padding-left: 10px;
+    }
+
+    /* 顶栏右侧指标 (全部支持点击交互) */
+    .hud-right-stats {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hud-stat-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .hud-stat-badge:hover {
+      background: var(--card-hover);
+      border-color: var(--cyan);
+      color: var(--text);
+    }
+    .hud-stat-badge strong {
+      color: var(--text);
+      font-family: var(--font-mono);
+    }
+
+    .db-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      cursor: pointer;
+    }
+    .dot-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .btn-recycle {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn-recycle:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--red);
+    }
+
+    /* 移动端视图切换 Tabs (只在移动端展示) */
+    .mobile-nav-tabs {
+      display: none;
+      background: rgba(12, 18, 34, 0.9);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 6px 12px;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .mobile-tab-btn {
+      flex: 1;
+      min-width: 85px;
+      padding: 6px 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .mobile-tab-btn.active {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    /* 主体布局 (三栏驾驶舱网格) */
+    .cockpit-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 290px 1fr 380px;
+      gap: 16px;
+      padding: 16px 24px;
+      max-width: 1720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* 通用 HUD 卡片面板 */
+    .hud-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5);
+    }
+
+    .hud-panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 24px;
+      height: 24px;
+      border-top: 2px solid var(--cyan);
+      border-left: 2px solid var(--cyan);
+      pointer-events: none;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    .panel-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ========================================================
+       左区：昨日成果与进展 & 成果物档案
+       ======================================================== */
+    .yesterday-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .yesterday-item {
+      background: var(--card-bg);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-left: 3px solid var(--emerald);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .yesterday-item:hover {
+      background: var(--card-hover);
+      border-color: var(--emerald);
+      box-shadow: 0 0 12px var(--emerald-glow);
+    }
+
+    .yesterday-title-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .check-badge {
+      color: var(--emerald);
+      font-weight: bold;
+    }
+
+    .yesterday-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .artifacts-vault {
+      margin-top: auto;
+      border-top: 1px solid var(--panel-border);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .artifact-chip {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .artifact-chip:hover {
+      border-color: var(--blue);
+      color: #ffffff;
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    /* ========================================================
+       中区：项目全局进度 & 持续化自动发布监控
+       ======================================================== */
+    .center-hero {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 发光圆环进度矩阵 (支持点击打开详情抽屉) */
+    .gauges-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .gauge-card {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gauge-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--cyan);
+      box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+    }
+    .gauge-card.active-proj {
+      border-top: 3px solid var(--red);
+      box-shadow: 0 0 16px var(--red-glow);
+    }
+    .gauge-card.hold-proj {
+      border-top: 3px solid var(--amber);
+      box-shadow: 0 0 16px var(--amber-glow);
+    }
+    .gauge-card.done-proj {
+      border-top: 3px solid var(--emerald);
+      box-shadow: 0 0 16px var(--emerald-glow);
+    }
+
+    .circular-progress {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: conic-gradient(var(--fill-color) calc(var(--percent) * 1%), rgba(255, 255, 255, 0.08) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .circular-progress::after {
+      content: "";
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #0f172a;
+      position: absolute;
+    }
+
+    .progress-number {
+      position: relative;
+      z-index: 2;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .gauge-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .gauge-status-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* 唯一步伐卡片 (Next Action) */
+    .next-action-hero-card {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 0 20px var(--red-glow);
+    }
+
+    .next-action-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .next-action-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #fca5a5;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .next-action-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .btn-pin-battle {
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 0 12px var(--red-glow);
+      transition: all 0.15s;
+    }
+    .btn-pin-battle:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+
+    /* 持续化常态守护盘 (头条、百家号) */
+    .continuous-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .continuous-card {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .continuous-card:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+    }
+
+    .continuous-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .continuous-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .continuous-platform-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+
+    .continuous-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .continuous-stats-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .streak-badge {
+      color: var(--amber);
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .linear-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .linear-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--emerald));
+      border-radius: 2px;
+    }
+
+    .btn-view-logs {
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      color: var(--cyan);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-view-logs:hover {
+      background: var(--cyan);
+      color: #0b0f19;
+    }
+
+    /* ========================================================
+       右区：今日计划与待办 & SDLC 流程流水线
+       ======================================================== */
+    .today-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Top-3 核心聚焦横幅 */
+    .top3-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .top3-item-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12.5px;
+    }
+
+    .top3-item-badge {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    /* 待办流水容器 (支持原生拖拽) */
+    .tasks-dropzone {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 80px;
+      padding: 4px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .tasks-dropzone.drag-over {
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px dashed var(--cyan);
+    }
+
+    /* 已完成收纳箱 (固定最大高度，超出产生区域滚动条) */
+    #doneDropzone {
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    #doneDropzone::-webkit-scrollbar {
+      width: 4px;
+    }
+    #doneDropzone::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.3);
+      border-radius: 2px;
+    }
+
+    .task-row {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .task-row:hover {
+      background: var(--card-hover);
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+    .task-row.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+    .task-row.completing {
+      opacity: 0;
+      transform: translateX(18px);
+    }
+
+    .task-row-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .cyber-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid rgba(0, 240, 255, 0.5);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s;
+      flex-shrink: 0;
+    }
+    .cyber-checkbox:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .task-row.done .cyber-checkbox {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+    .cyber-checkbox svg {
+      width: 12px;
+      height: 12px;
+      stroke: #050811;
+      stroke-width: 3.5;
+      fill: none;
+      opacity: 0;
+    }
+    .task-row.done .cyber-checkbox svg {
+      opacity: 1;
+    }
+
+    .task-row-title {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+      transition: all 0.2s;
+    }
+    .task-row.done .task-row-title {
+      text-decoration: line-through;
+      color: var(--text-dim);
+    }
+
+    .task-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .task-row:hover .task-row-actions {
+      opacity: 1;
+    }
+
+    .btn-task-action {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 3px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .btn-task-action:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .btn-task-action.delete:hover {
+      color: var(--red);
+    }
+
+    /* SDLC 六阶段流水线图示 */
+    .sdlc-flow-card {
+      background: rgba(12, 18, 34, 0.7);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sdlc-nodes {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .sdlc-node {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .sdlc-node.active {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan-glow);
+    }
+
+    /* ========================================================
+       底部常驻发光 Command Bar (HUD 终端快捷录入)
+       ======================================================== */
+    .bottom-command-bar {
+      position: sticky;
+      bottom: 0;
+      background: rgba(8, 12, 24, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--panel-border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 40;
+    }
+
+    .cmd-prompt-symbol {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--cyan);
+      text-shadow: 0 0 8px var(--cyan-glow);
+    }
+
+    .cmd-input {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #ffffff;
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .cmd-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 14px var(--cyan-glow);
+    }
+
+    .btn-cmd-submit {
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      color: #050811;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 12px var(--cyan-glow);
+      transition: opacity 0.15s;
+    }
+    .btn-cmd-submit:hover {
+      opacity: 0.9;
+    }
+
+    /* ========================================================
+       底部 5s 撤销 Toast (Undo Notification)
+       ======================================================== */
+    #undoToast {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--cyan);
+      box-shadow: 0 0 24px rgba(0, 240, 255, 0.35);
+      border-radius: 8px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 100;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #undoToast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toast-undo-btn {
+      background: var(--cyan);
+      color: #050811;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .toast-progress-line {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--cyan);
+      width: 100%;
+      transition: width 5s linear;
+    }
+
+    /* 弹窗抽屉 (Modals & Drawers) */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 99;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #0f172a;
+      border: 1px solid var(--cyan);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 720px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.3);
+    }
+
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      background: #090d18;
+    }
+
+    .log-line {
+      margin-bottom: 8px;
+      display: flex;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .log-time { color: var(--text-dim); }
+    .log-tag-info { color: var(--cyan); font-weight: bold; }
+    .log-tag-success { color: var(--emerald); font-weight: bold; }
+    .log-tag-error { color: var(--red); font-weight: bold; }
+
+    /* 发布任务表格列表 */
+    .pub-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    .pub-table th {
+      color: var(--cyan);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 8px;
+    }
+    .pub-table td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 8px;
+    }
+    .pub-table tr:hover {
+      background: rgba(0, 240, 255, 0.05);
+    }
+
+    /* 多端响应式 */
+    @media (max-width: 1024px) {
+      .cockpit-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+      .mobile-nav-tabs {
+        display: flex;
+      }
+      .hud-clock-center {
+        display: none;
+      }
+      .hud-right-stats .hud-stat-badge:nth-child(n+3) {
+        display: none;
+      }
+      .gauges-grid {
+        grid-template-columns: 1fr;
+      }
+      .mobile-view-pane {
+        display: none;
+      }
+      .mobile-view-pane.active {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶栏 HUD (Master Deck) -->
+  <header>
+    <div class="brand-group">
+      <span class="hud-tag">HUD</span>
+      <h1 class="brand-title">个人战略总控驾驶舱</h1>
+      <div class="db-indicator" onclick="openSystemStatusModal()">
+        <span class="dot-pulse"></span>
+        <span id="dbStatusLabel">SQLite 实时联机</span>
+      </div>
+    </div>
+
+    <!-- 居中全息跳动数字时钟 -->
+    <div class="hud-clock-center">
+      <span class="clock-time" id="liveClock">21:58:12</span>
+      <span class="clock-date" id="liveDate">2026.10.10 周六</span>
+    </div>
+
+    <!-- 顶部状态指标 (全部支持点击交互) -->
+    <div class="hud-right-stats">
+      <div class="hud-stat-badge" onclick="filterProjectOverview()" title="点击查看项目概览">
+        攻坚 <strong id="statActive">1</strong>
+      </div>
+      <div class="hud-stat-badge" onclick="focusTodayTasks()" title="点击定位到今日待办">
+        待办 <strong id="statPending">3</strong>
+      </div>
+      <div class="hud-stat-badge" onclick="openPublisherModal()" title="点击查看自动化发布流水与任务列表">
+        持续发布 <strong id="statContinuous">2</strong>
+      </div>
+      <button class="btn-recycle" onclick="openRecycleBinModal()" title="查看已删除任务与回收站">
+        🗑️ <span id="recycleCountBadge">0</span>
+      </button>
+      <button class="btn-task-action" onclick="openSystemStatusModal()" title="系统总控与状态" style="color:var(--cyan); font-size:14px; margin-left:4px;">
+        ⚙️
+      </button>
+    </div>
+  </header>
+
+  <!-- 移动端视图切换 Tabs -->
+  <nav class="mobile-nav-tabs">
+    <div class="mobile-tab-btn active" onclick="switchMobileTab('center')">🎛️ 项目全景</div>
+    <div class="mobile-tab-btn" onclick="switchMobileTab('right')">⚡ 今日计划</div>
+    <div class="mobile-tab-btn" onclick="switchMobileTab('left')">📋 昨日进展</div>
+  </nav>
+
+  <!-- 三栏总控驾驶舱主体 -->
+  <div class="cockpit-grid">
+
+    <!-- ==========================================
+         左区：昨日成果与进展 & 交付成果物档案柜
+         ========================================== -->
+    <section class="hud-panel mobile-view-pane" id="pane-left">
+      <div class="panel-header">
+        <div class="panel-title"><span>📋</span> 昨日成果与进展 / RECAP</div>
+        <div class="panel-desc">COMPLETED MILESTONES</div>
+      </div>
+
+      <div class="yesterday-list" id="yesterdayList">
+        <!-- 动态加载昨日战报卡片 -->
+      </div>
+
+      <!-- 交付成果物档案柜 -->
+      <div class="artifacts-vault">
+        <div style="font-size: 11px; font-weight:700; color: var(--cyan); letter-spacing:1px; text-transform:uppercase;">
+          📦 交付成果物直达 (ARTIFACTS)
+        </div>
+        <div class="artifact-chip" onclick="copyOrAlert('output/2026-10-10/买9斤蜜薯仅退款...html')">
+          <span>📄 每日热点首件母版 HTML</span>
+          <span style="font-family:var(--font-mono); font-size:10.5px; color:var(--emerald);">459KB</span>
+        </div>
+        <div class="artifact-chip" onclick="copyOrAlert('baijiahao/data/publisher.db')">
+          <span>🔌 publisher.db 多平台发布库</span>
+          <span style="font-family:var(--font-mono); font-size:10.5px; color:var(--cyan);">30批次</span>
+        </div>
+        <div class="artifact-chip" onclick="copyOrAlert('.agents/skills/spec-driven-dev/SKILL.md')">
+          <span>⚙️ SDLC 六阶段工程规范技能</span>
+          <span style="font-family:var(--font-mono); font-size:10.5px; color:var(--blue);">标准</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         中区：项目全局进度 & 持续化自动发布监控
+         ========================================== -->
+    <section class="hud-panel center-hero mobile-view-pane active" id="pane-center">
+      <div class="panel-header">
+        <div class="panel-title"><span>🎛️</span> 项目全局进度 / RADAR</div>
+        <div class="panel-desc">点击任意项目可查看详细里程碑与决策备忘</div>
+      </div>
+
+      <!-- 阶段项目发光圆环仪表盘 (支持点击查看详情) -->
+      <div class="gauges-grid" id="gaugesGrid">
+        <!-- 动态加载 15% 攻坚 / 90% 搁置 / 100% 闭环项目 -->
+      </div>
+
+      <!-- 核心攻坚战唯一步伐卡片 (Next Action) -->
+      <div class="next-action-hero-card" id="nextActionCard">
+        <div class="next-action-left">
+          <div class="next-action-badge">🔥 唯一步伐 (NEXT ACTION)</div>
+          <div class="next-action-title" id="nextActionText">挑选 1 个破局选题打样第一篇深度母版样章</div>
+        </div>
+        <button class="btn-pin-battle" onclick="pinNextActionToToday()">+ 提为今日行动</button>
+      </div>
+
+      <!-- 持续化常态守护盘 (头条、百家号自动发布) -->
+      <div class="continuous-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:12px; font-weight:700; color:var(--cyan); letter-spacing:1px; text-transform:uppercase;">
+            🤖 自动化持续发布监控 (DAEMONS &amp; STREAKS)
+          </div>
+          <button class="btn-view-logs" onclick="openPublisherModal()">📑 完整发布任务库</button>
+        </div>
+
+        <div id="continuousTasksList" style="display:flex; flex-direction:column; gap:10px;">
+          <!-- 动态渲染头条、百家号守护卡片 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         右区：今日计划与行动 & SDLC 流程流水线
+         ========================================== -->
+    <section class="hud-panel mobile-view-pane" id="pane-right">
+      <div class="panel-header">
+        <div class="panel-title"><span>⚡</span> 今日计划与行动 / ACTION PLAN</div>
+        <div class="panel-desc">DRAG &amp; DROP CHECKLIST</div>
+      </div>
+
+      <!-- Top-3 核心聚焦横幅 -->
+      <div class="top3-cards-list" id="top3List">
+        <!-- 动态加载 Top-3 焦点 -->
+      </div>
+
+      <!-- 待办流水容器 (支持原生拖拽) -->
+      <div class="today-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:11.5px; color:var(--text-muted);">今日待办清单 (支持双击编辑 / 拖拽流转)</div>
+          <span style="font-size:11px; color:var(--text-dim);" id="pendingCountText">剩余 3 项</span>
+        </div>
+
+        <div class="tasks-dropzone" id="pendingDropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'pending')">
+          <!-- 动态渲染待办列表 -->
+        </div>
+
+        <!-- 已完成收纳箱 (固定高度与区域滚动条，支持拖回恢复) -->
+        <div style="margin-top:8px;">
+          <div style="font-size:11.5px; color:var(--text-dim); margin-bottom:6px; cursor:pointer;" onclick="toggleDoneGroup()">
+            <span id="doneArrow">▶</span> 已完成事项 (<span id="doneCountText">0</span>) - 点击展开 (可拖拽恢复)
+          </div>
+          <div class="tasks-dropzone" id="doneDropzone" style="display:none;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'done')">
+            <!-- 动态渲染已完成列表 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SDLC 6 阶段流水线状态指示 -->
+      <div class="sdlc-flow-card" style="margin-top:auto;">
+        <div style="font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">
+          SDLC 六阶段工程流水线 (SPEC-DRIVEN FLOW)
+        </div>
+        <div class="sdlc-nodes">
+          <div class="sdlc-node active">需求</div>
+          <span style="color:var(--text-dim); font-size:10px;">➜</span>
+          <div class="sdlc-node active">设计</div>
+          <span style="color:var(--text-dim); font-size:10px;">➜</span>
+          <div class="sdlc-node active">工单</div>
+          <span style="color:var(--text-dim); font-size:10px;">➜</span>
+          <div class="sdlc-node active">编码</div>
+          <span style="color:var(--text-dim); font-size:10px;">➜</span>
+          <div class="sdlc-node">测试</div>
+          <span style="color:var(--text-dim); font-size:10px;">➜</span>
+          <div class="sdlc-node">验收</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 底部常驻 HUD 快捷指令行 -->
+  <footer class="bottom-command-bar">
+    <span class="cmd-prompt-symbol">&gt;</span>
+    <input type="text" class="cmd-input" id="cmdInput" placeholder="输入今日行动并按 Enter 直接存入 SQLite... (例如: 挑选公众号首期母版选题)">
+    <button class="btn-cmd-submit" onclick="handleCommandSubmit()">存入今日计划</button>
+  </footer>
+
+  <!-- 底部 5s 撤销 Toast (Undo Notification) -->
+  <div id="undoToast">
+    <span style="color:var(--cyan); font-weight:bold;">✓</span>
+    <span id="toastMsgText" style="font-size:13px; color:#ffffff;">已完成行动</span>
+    <button class="toast-undo-btn" id="toastUndoBtn" onclick="executeUndo()">↶ 撤销 (<span id="undoCountdownSec">5</span>s)</button>
+    <div class="toast-progress-line" id="toastProgressLine"></div>
+  </div>
+
+  <!-- 弹窗 1: 项目详情抽屉 (点击公众号等项目时弹出) -->
+  <div class="modal-backdrop" id="projectDetailModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="projModalTitle">项目详细全貌与阶段规划</span>
+        <button style="background:transparent; border:none; color:#cbd5e1; font-size:16px; cursor:pointer;" onclick="closeProjectModal()">✕</button>
+      </div>
+      <div class="modal-body" id="projModalContent">
+        <!-- 动态项目信息 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗 2: 多平台内容发布总控台 (读取 publisher.db) -->
+  <div class="modal-backdrop" id="publisherModal">
+    <div class="modal-box" style="max-width:850px;">
+      <div class="modal-header">
+        <span>📑 多平台内容发布流水 (publisher.db 实时库)</span>
+        <button style="background:transparent; border:none; color:#cbd5e1; font-size:16px; cursor:pointer;" onclick="closePublisherModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; gap:8px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+          <button class="btn-view-logs" onclick="switchPubTab('jobs')">发布任务批次 (publish_jobs)</button>
+          <button class="btn-view-logs" onclick="switchPubTab('tasks')">分发执行结果 (publish_tasks)</button>
+          <button class="btn-view-logs" onclick="switchPubTab('auto')">云端监控与定时流水 (automation_jobs)</button>
+        </div>
+        <div id="publisherTabContent">
+          <!-- 动态表格 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗 3: 持续任务运行日志抽屉 -->
+  <div class="modal-backdrop" id="logsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="logsModalTitle">自动化运行日志流</span>
+        <button style="background:transparent; border:none; color:#cbd5e1; font-size:16px; cursor:pointer;" onclick="closeLogsModal()">✕</button>
+      </div>
+      <div class="modal-body" id="logsModalContent">
+        <!-- 动态日志 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗 4: 回收站弹窗 -->
+  <div class="modal-backdrop" id="recycleModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>🗑️ 回收站 (已软删除任务)</span>
+        <button style="background:transparent; border:none; color:#cbd5e1; font-size:16px; cursor:pointer;" onclick="closeRecycleModal()">✕</button>
+      </div>
+      <div class="modal-body" id="recycleModalContent">
+        <!-- 动态渲染回收站列表 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗 5: 系统总控状态弹窗 -->
+  <div class="modal-backdrop" id="systemStatusModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>⚙️ 系统状态与全局设置</span>
+        <button style="background:transparent; border:none; color:#cbd5e1; font-size:16px; cursor:pointer;" onclick="closeSystemStatusModal()">✕</button>
+      </div>
+      <div class="modal-body" id="systemStatusContent">
+        <div style="margin-bottom:12px;"><strong>💾 数据库引擎:</strong> SQLite 3 (<code>/Users/gg/Documents/my-workspace/workbench.db</code>)</div>
+        <div style="margin-bottom:12px;"><strong>📡 内容分发库:</strong> <code>baijiahao/data/publisher.db</code> (已联机)</div>
+        <div style="margin-bottom:12px;"><strong>🖥️ 远程服务器:</strong> M4 Mac mini (<code>gangdeMac-mini.local</code> / 192.168.10.45 🟢 在线)</div>
+        <div style="margin-bottom:12px;"><strong>🔌 原生通道:</strong> my-server SSH MCP (零弹窗直连就绪)</div>
+        <div style="margin-bottom:12px;"><strong>⚡ Token 监控:</strong> 独立后台采集已就绪 (可扩展看板)</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全局大屏状态
+    const state = {
+      todayTasks: [],
+      doneTasks: [],
+      yesterdayRecap: [],
+      projects: [],
+      continuousTasks: [],
+      rules: [],
+      lastUndoId: null,
+      undoTimer: null,
+      undoCountdownInterval: null,
+      draggedTaskId: null,
+      showDoneGroup: false,
+      publisherData: null,
+      currentPubTab: 'jobs'
+    };
+
+    const API_BASE = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1") 
+      ? window.location.origin 
+      : "http://localhost:8765";
+
+    // 初始化启动
+    async function init() {
+      startLiveClock();
+      setupCommandInput();
+      await fetchCockpitState();
+    }
+
+    // 实时全息时钟 (秒级跳动)
+    function startLiveClock() {
+      const clockEl = document.getElementById("liveClock");
+      const dateEl = document.getElementById("liveDate");
+      const pad = (n) => String(n).padStart(2, "0");
+
+      function update() {
+        const now = new Date();
+        clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        dateEl.textContent = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} ${weekdays[now.getDay()]}`;
+      }
+      update();
+      setInterval(update, 1000);
+    }
+
+    function setupCommandInput() {
+      const input = document.getElementById("cmdInput");
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          handleCommandSubmit();
+        }
+      });
+    }
+
+    // 获取全盘大屏数据
+    async function fetchCockpitState() {
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/state`);
+        if (!resp.ok) throw new Error("API error: " + resp.status);
+        const data = await resp.json();
+
+        state.todayTasks = data.today_tasks || [];
+        state.doneTasks = data.done_tasks || [];
+        state.yesterdayRecap = data.yesterday_recap || [];
+        state.projects = data.projects || [];
+        state.continuousTasks = data.continuous_tasks || [];
+        state.rules = data.rules || [];
+
+        document.getElementById("recycleCountBadge").textContent = data.stats.recycle_count || 0;
+        document.getElementById("statActive").textContent = data.stats.active_projects || 0;
+        document.getElementById("statPending").textContent = state.todayTasks.length;
+        document.getElementById("statContinuous").textContent = state.continuousTasks.length;
+
+        renderAll();
+      } catch (err) {
+        console.warn("API 暂未联机，使用本地缓存模式:", err);
+        document.getElementById("dbStatusLabel").textContent = "离线缓存模式";
+      }
+    }
+
+    function renderAll() {
+      renderYesterdayRecap();
+      renderProjectsGauges();
+      renderContinuousTasks();
+      renderTodayTasks();
+    }
+
+    // 1. 渲染左区：昨日成果与进展
+    function renderYesterdayRecap() {
+      const container = document.getElementById("yesterdayList");
+      if (!state.yesterdayRecap || state.yesterdayRecap.length === 0) {
+        container.innerHTML = `<div style="font-size:12px; color:var(--text-dim); text-align:center; padding:18px;">昨日暂无闭环成果</div>`;
+        return;
+      }
+
+      container.innerHTML = state.yesterdayRecap.map(item => `
+        <div class="yesterday-item">
+          <div class="yesterday-title-row">
+            <span class="check-badge">✓</span>
+            <span>${escapeHtml(item.title)}</span>
+          </div>
+          <div class="yesterday-meta">
+            <span>● 已达成闭环</span>
+            <span>${item.completed_at ? item.completed_at.slice(11, 16) : '18:30'} 交付</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // 2. 渲染中区：发光圆环进度沙盘 & Next Action (支持点击打开详情)
+    function renderProjectsGauges() {
+      const grid = document.getElementById("gaugesGrid");
+      if (!state.projects || state.projects.length === 0) return;
+
+      grid.innerHTML = state.projects.slice(0, 3).map(p => {
+        const cls = p.status === 'active' ? 'active-proj' : (p.status === 'hold' ? 'hold-proj' : 'done-proj');
+        const colorVar = p.status === 'active' ? 'var(--red)' : (p.status === 'hold' ? 'var(--amber)' : 'var(--emerald)');
+        return `
+          <div class="gauge-card ${cls}" onclick="openProjectDetailModal('${p.id}')" title="点击查看【${escapeHtml(p.title)}】详情">
+            <div class="circular-progress" style="--percent: ${p.progress}; --fill-color: ${colorVar};">
+              <span class="progress-number">${p.progress}%</span>
+            </div>
+            <div class="gauge-title">${escapeHtml(p.title)}</div>
+            <div class="gauge-status-text">${escapeHtml(p.status_text || p.status)}</div>
+          </div>
+        `;
+      }).join("");
+
+      // 提取核心攻坚项目的 Next Action
+      const activeProj = state.projects.find(p => p.status === "active") || state.projects[0];
+      if (activeProj && activeProj.next_step) {
+        document.getElementById("nextActionText").textContent = activeProj.next_step;
+        document.getElementById("nextActionCard").dataset.projId = activeProj.id;
+        document.getElementById("nextActionCard").dataset.nextStep = activeProj.next_step;
+      }
+    }
+
+    // 点击项目圆环：打开项目全景详情抽屉
+    function openProjectDetailModal(projectId) {
+      const proj = state.projects.find(p => p.id === projectId);
+      if (!proj) return;
+
+      document.getElementById("projModalTitle").textContent = `📁 ${proj.title} · 项目全貌与里程碑`;
+      const modal = document.getElementById("projectDetailModal");
+      const content = document.getElementById("projModalContent");
+
+      const artifacts = Array.isArray(proj.artifacts) ? proj.artifacts : [];
+      const milestones = Array.isArray(proj.milestones) ? proj.milestones : [];
+
+      content.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:8px;">
+          <div>
+            <span style="font-size:12px; color:var(--text-dim);">当前状态:</span>
+            <strong style="color:var(--cyan); margin-left:6px;">${proj.status_text || proj.status}</strong>
+          </div>
+          <div>
+            <span style="font-size:12px; color:var(--text-dim);">进度:</span>
+            <strong style="color:var(--text); font-family:var(--font-mono); font-size:16px; margin-left:6px;">${proj.progress}%</strong>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-weight:700; color:var(--cyan); font-size:12px; margin-bottom:4px;">📌 核心定位与背景</div>
+          <div style="color:#cbd5e1; line-height:1.6;">${escapeHtml(proj.summary || '暂无概述')}</div>
+        </div>
+
+        ${proj.decision ? `
+          <div style="margin-bottom:14px; background:rgba(245, 158, 11, 0.08); border:1px dashed rgba(245, 158, 11, 0.3); border-radius:6px; padding:10px 12px;">
+            <div style="font-weight:700; color:var(--amber); font-size:12px; margin-bottom:4px;">💡 决策记录与备忘</div>
+            <div style="color:#e2e8f0; font-size:12.5px;">${escapeHtml(proj.decision)}</div>
+          </div>
+        ` : ''}
+
+        <div style="margin-bottom:14px; background:rgba(0, 240, 255, 0.08); border:1px solid rgba(0, 240, 255, 0.3); border-radius:6px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11px; color:var(--cyan); font-weight:700; text-transform:uppercase;">唯一步伐 (Next Action)</div>
+              <div style="font-size:13.5px; font-weight:600; color:#ffffff; margin-top:2px;">➜ ${escapeHtml(proj.next_step || '未设定')}</div>
+            </div>
+            <button class="btn-pin-battle" onclick="pinSpecificActionToToday('${escapeHtml(proj.next_step || '')}', '${proj.id}')">+ 提为今日行动</button>
+          </div>
+        </div>
+
+        ${milestones.length > 0 ? `
+          <div style="margin-bottom:14px;">
+            <div style="font-weight:700; color:var(--text-muted); font-size:12px; margin-bottom:6px;">🚩 关键阶段里程碑</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${milestones.map((m, idx) => `
+                <div style="display:flex; align-items:center; gap:8px; font-size:12.5px; background:rgba(255,255,255,0.02); padding:6px 10px; border-radius:4px;">
+                  <span style="color:var(--cyan); font-family:var(--font-mono);">M${idx+1}</span>
+                  <span>${escapeHtml(m)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${artifacts.length > 0 ? `
+          <div>
+            <div style="font-weight:700; color:var(--text-muted); font-size:12px; margin-bottom:6px;">📦 关联资产与成果物</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              ${artifacts.map(a => `
+                <div class="artifact-chip" onclick="copyOrAlert('${escapeHtml(a)}')">
+                  <span>${escapeHtml(a)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+
+      modal.classList.add("show");
+    }
+
+    function closeProjectModal() {
+      document.getElementById("projectDetailModal").classList.remove("show");
+    }
+
+    // 3. 渲染持续化任务守护盘 (头条、百家号)
+    function renderContinuousTasks() {
+      const container = document.getElementById("continuousTasksList");
+      if (!state.continuousTasks || state.continuousTasks.length === 0) return;
+
+      container.innerHTML = state.continuousTasks.map(c => `
+        <div class="continuous-card">
+          <div class="continuous-header">
+            <div class="continuous-title-group">
+              <span class="continuous-platform-badge">${escapeHtml(c.platform.toUpperCase())}</span>
+              <span class="continuous-title">${escapeHtml(c.title)}</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-view-logs" onclick="openPublisherModal('${c.platform}')">查看发布任务</button>
+              <button class="btn-view-logs" onclick="openLogsModal('${c.id}')">实时日志</button>
+            </div>
+          </div>
+          <div class="linear-bar-wrap">
+            <div class="linear-bar-fill" style="width: ${c.progress}%;"></div>
+          </div>
+          <div class="continuous-stats-row">
+            <span>连续平稳运行 <strong class="streak-badge">🔥 ${c.streak_days} 天</strong></span>
+            <span>进度 ${c.progress}% · 上次触发 ${escapeHtml(c.last_run_at || '今晨 07:00')}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // 4. 渲染右区：今日计划与待办 (Top-3 与 待办流)
+    function renderTodayTasks() {
+      const top3Container = document.getElementById("top3List");
+      const pendingContainer = document.getElementById("pendingDropzone");
+      const doneContainer = document.getElementById("doneDropzone");
+
+      // Top-3
+      const top3Items = state.todayTasks.filter(t => t.priority === "top3").slice(0, 3);
+      if (top3Items.length > 0) {
+        top3Container.innerHTML = top3Items.map((item, idx) => `
+          <div class="top3-item-card">
+            <span class="top3-item-badge">📌 TOP ${idx + 1}</span>
+            <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.title)}</span>
+            <button class="btn-task-action" onclick="toggleTaskStatus('${item.id}')" title="打勾完成">✓</button>
+          </div>
+        `).join("");
+      } else {
+        top3Container.innerHTML = "";
+      }
+
+      // 今日待办
+      document.getElementById("pendingCountText").textContent = `剩余 ${state.todayTasks.length} 项`;
+      if (state.todayTasks.length === 0) {
+        pendingContainer.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim); font-size:12.5px;">🎉 今日计划全部达成！</div>`;
+      } else {
+        pendingContainer.innerHTML = state.todayTasks.map(t => createTaskRowHtml(t)).join("");
+      }
+
+      // 已完成
+      document.getElementById("doneCountText").textContent = state.doneTasks.length;
+      doneContainer.innerHTML = state.doneTasks.map(t => createTaskRowHtml(t)).join("");
+    }
+
+    function createTaskRowHtml(task) {
+      const isDone = task.status === "done";
+      return `
+        <div class="task-row ${isDone ? 'done' : ''}" 
+             id="task-row-${task.id}" 
+             draggable="true" 
+             ondragstart="handleDragStart(event, '${task.id}')"
+             ondragend="handleDragEnd(event)"
+             ondblclick="editTaskInline('${task.id}')">
+          <div class="task-row-left">
+            <div class="cyber-checkbox" onclick="toggleTaskStatus('${task.id}')">
+              <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="task-row-title" id="title-text-${task.id}">${escapeHtml(task.title)}</span>
+          </div>
+          <div class="task-row-actions">
+            <button class="btn-task-action" onclick="editTaskInline('${task.id}')" title="双击或点击编辑">✏️</button>
+            <button class="btn-task-action delete" onclick="softDeleteTask('${task.id}')" title="删除入回收站">🗑️</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 交互与状态控制 (Toggle, Undo, Edit, Soft-delete)
+    // ==========================================
+    async function toggleTaskStatus(taskId, explicitStatus = null) {
+      const row = document.getElementById(`task-row-${taskId}`);
+      const task = state.todayTasks.find(t => t.id === taskId) || state.doneTasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const isToDone = explicitStatus ? explicitStatus === "done" : task.status === "pending";
+
+      if (isToDone && row) {
+        row.classList.add("completing");
+      }
+
+      setTimeout(async () => {
+        try {
+          const resp = await fetch(`${API_BASE}/api/v1/tasks/toggle`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: taskId, status: isToDone ? "done" : "pending" })
+          });
+          const res = await resp.json();
+          if (res.success) {
+            await fetchCockpitState();
+            if (isToDone) {
+              triggerUndoToast(task.title, res.undo_id);
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }, 150);
+    }
+
+    // 软删除任务
+    async function softDeleteTask(taskId) {
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/tasks/delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: taskId })
+        });
+        const res = await resp.json();
+        if (res.success) {
+          await fetchCockpitState();
+          triggerUndoToast("任务已移入回收站", res.undo_id);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 原地双击编辑任务
+    function editTaskInline(taskId) {
+      const titleSpan = document.getElementById(`title-text-${taskId}`);
+      if (!titleSpan) return;
+      const currentTitle = titleSpan.textContent;
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = currentTitle;
+      input.className = "cmd-input";
+      input.style.padding = "2px 6px";
+      input.style.fontSize = "12.5px";
+
+      const save = async () => {
+        const newTitle = input.value.trim();
+        if (newTitle && newTitle !== currentTitle) {
+          await fetch(`${API_BASE}/api/v1/tasks/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: taskId, title: newTitle })
+          });
+          await fetchCockpitState();
+        } else {
+          titleSpan.textContent = currentTitle;
+        }
+      };
+
+      input.addEventListener("blur", save);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") save();
+        if (e.key === "Escape") titleSpan.textContent = currentTitle;
+      });
+
+      titleSpan.innerHTML = "";
+      titleSpan.appendChild(input);
+      input.focus();
+    }
+
+    // 将 Next Action 提为今日行动 (带严格防重唯一校验)
+    async function pinNextActionToToday() {
+      const card = document.getElementById("nextActionCard");
+      const nextStep = card.dataset.nextStep;
+      const projId = card.dataset.projId;
+      if (!nextStep) return;
+
+      await pinSpecificActionToToday(nextStep, projId);
+    }
+
+    async function pinSpecificActionToToday(nextStep, projId) {
+      if (!nextStep) return;
+      const targetTitle = `【聚焦】${nextStep}`;
+
+      // 1. 前端先校验是否已存在
+      const isAlreadyExists = state.todayTasks.some(t => t.title === targetTitle || (t.title.includes(nextStep) && t.status === "pending"));
+      if (isAlreadyExists) {
+        showLightToast(`⚠️ 该行动已在今日计划中，无需重复添加！`);
+        return;
+      }
+
+      // 2. 发起创建
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/tasks/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: targetTitle,
+            priority: "top3",
+            project_id: projId
+          })
+        });
+        const res = await resp.json();
+        if (res.duplicate) {
+          showLightToast(`⚠️ 该行动已在今日计划中，无需重复添加！`);
+        } else if (res.success) {
+          showLightToast(`✓ 已成功加入今日计划清单！`);
+          await fetchCockpitState();
+          closeProjectModal();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 快捷命令条录入
+    async function handleCommandSubmit() {
+      const input = document.getElementById("cmdInput");
+      const title = input.value.trim();
+      if (!title) return;
+
+      // 防重校验
+      if (state.todayTasks.some(t => t.title === title)) {
+        showLightToast("⚠️ 今日清单中已存在完全同名的待办！");
+        return;
+      }
+
+      input.value = "";
+      const resp = await fetch(`${API_BASE}/api/v1/tasks/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title, priority: "normal" })
+      });
+      const res = await resp.json();
+      if (res.duplicate) {
+        showLightToast("⚠️ 今日清单中已存在完全同名的待办！");
+      } else {
+        await fetchCockpitState();
+      }
+    }
+
+    // 5秒撤销 Toast 动画与倒计时
+    function triggerUndoToast(msg, undoId) {
+      state.lastUndoId = undoId;
+      const toast = document.getElementById("undoToast");
+      const msgEl = document.getElementById("toastMsgText");
+      const countEl = document.getElementById("undoCountdownSec");
+      const line = document.getElementById("toastProgressLine");
+
+      msgEl.textContent = `已完成「${msg}」`;
+      countEl.textContent = "5";
+
+      toast.classList.add("show");
+      line.style.transition = "none";
+      line.style.width = "100%";
+      setTimeout(() => {
+        line.style.transition = "width 5s linear";
+        line.style.width = "0%";
+      }, 30);
+
+      if (state.undoTimer) clearTimeout(state.undoTimer);
+      if (state.undoCountdownInterval) clearInterval(state.undoCountdownInterval);
+
+      let left = 5;
+      state.undoCountdownInterval = setInterval(() => {
+        left--;
+        if (left >= 0) countEl.textContent = left;
+        if (left <= 0) clearInterval(state.undoCountdownInterval);
+      }, 1000);
+
+      state.undoTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 5000);
+    }
+
+    function showLightToast(text) {
+      const toast = document.getElementById("undoToast");
+      const msgEl = document.getElementById("toastMsgText");
+      const btn = document.getElementById("toastUndoBtn");
+      const line = document.getElementById("toastProgressLine");
+
+      msgEl.textContent = text;
+      btn.style.display = "none";
+      line.style.display = "none";
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+        btn.style.display = "inline-block";
+        line.style.display = "block";
+      }, 2500);
+    }
+
+    async function executeUndo() {
+      const toast = document.getElementById("undoToast");
+      toast.classList.remove("show");
+      if (state.undoTimer) clearTimeout(state.undoTimer);
+      if (state.undoCountdownInterval) clearInterval(state.undoCountdownInterval);
+
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/tasks/undo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ undo_id: state.lastUndoId })
+        });
+        const res = await resp.json();
+        if (res.success) {
+          await fetchCockpitState();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // ==========================================
+    // 原生拖拽流转 (HTML5 Drag & Drop)
+    // ==========================================
+    function handleDragStart(e, taskId) {
+      state.draggedTaskId = taskId;
+      e.dataTransfer.setData("text/plain", taskId);
+      e.currentTarget.classList.add("dragging");
+    }
+
+    function handleDragEnd(e) {
+      e.currentTarget.classList.remove("dragging");
+      document.querySelectorAll(".tasks-dropzone").forEach(z => z.classList.remove("drag-over"));
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add("drag-over");
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove("drag-over");
+    }
+
+    async function handleDrop(e, targetZone) {
+      e.preventDefault();
+      e.currentTarget.classList.remove("drag-over");
+      const taskId = state.draggedTaskId;
+      if (!taskId) return;
+
+      const task = state.todayTasks.find(t => t.id === taskId) || state.doneTasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const currentStatus = task.status;
+      const targetStatus = targetZone === "done" ? "done" : "pending";
+
+      if (currentStatus !== targetStatus) {
+        await toggleTaskStatus(taskId, targetStatus);
+      }
+    }
+
+    // 折叠展开已完成 (带区域滚动条)
+    function toggleDoneGroup() {
+      state.showDoneGroup = !state.showDoneGroup;
+      const zone = document.getElementById("doneDropzone");
+      const arrow = document.getElementById("doneArrow");
+      if (state.showDoneGroup) {
+        zone.style.display = "flex";
+        arrow.textContent = "▼";
+      } else {
+        zone.style.display = "none";
+        arrow.textContent = "▶";
+      }
+    }
+
+    // ==========================================
+    // 弹窗: 查看 publisher.db 真实发布任务流水
+    // ==========================================
+    async function openPublisherModal(platformFilter = null) {
+      const modal = document.getElementById("publisherModal");
+      modal.classList.add("show");
+      renderPublisherTabContent('jobs', platformFilter);
+
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/publisher/data`);
+        const data = await resp.json();
+        state.publisherData = data;
+        renderPublisherTabContent(state.currentPubTab, platformFilter);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function closePublisherModal() {
+      document.getElementById("publisherModal").classList.remove("show");
+    }
+
+    function switchPubTab(tabKey) {
+      state.currentPubTab = tabKey;
+      renderPublisherTabContent(tabKey);
+    }
+
+    function renderPublisherTabContent(tabKey, filter = null) {
+      const container = document.getElementById("publisherTabContent");
+      if (!state.publisherData) {
+        container.innerHTML = `<div style="text-align:center; color:var(--text-dim); padding:20px;">正在从 publisher.db 读取实时数据...</div>`;
+        return;
+      }
+
+      if (tabKey === 'jobs') {
+        const jobs = state.publisherData.jobs || [];
+        if (jobs.length === 0) {
+          container.innerHTML = `<div style="color:var(--text-dim); padding:16px;">暂无发布任务批次</div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="pub-table">
+            <thead>
+              <tr>
+                <th>批次 ID</th>
+                <th>创建时间</th>
+                <th>目标平台</th>
+                <th>文章标题</th>
+                <th>状态</th>
+                <th>详情报错</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${jobs.map(j => {
+                const statusColor = j.status === 'closed' ? 'var(--emerald)' : (j.status === 'paused' ? 'var(--amber)' : 'var(--red)');
+                return `
+                  <tr>
+                    <td style="font-family:var(--font-mono); color:var(--cyan);">${j.id}</td>
+                    <td style="color:var(--text-dim);">${j.created_at_fmt || ''}</td>
+                    <td><span class="continuous-platform-badge">${j.platforms}</span></td>
+                    <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(j.article_title || '')}">
+                      ${escapeHtml(j.article_title || '（未关联标题）')}
+                    </td>
+                    <td><span style="color:${statusColor}; font-weight:700;">${j.status}</span></td>
+                    <td style="color:${j.last_error ? 'var(--red)' : 'var(--text-dim)'}; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(j.last_error || '')}">
+                      ${escapeHtml(j.last_error || '无异常')}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } else if (tabKey === 'tasks') {
+        const tasks = state.publisherData.tasks || [];
+        container.innerHTML = `
+          <table class="pub-table">
+            <thead>
+              <tr>
+                <th>任务 ID</th>
+                <th>所属批次</th>
+                <th>平台</th>
+                <th>阶段 (Stage)</th>
+                <th>状态</th>
+                <th>更新时间</th>
+                <th>执行报错</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tasks.map(t => {
+                const statusColor = t.status === 'succeeded' ? 'var(--emerald)' : (t.status === 'pending' ? 'var(--cyan)' : 'var(--red)');
+                return `
+                  <tr>
+                    <td style="font-family:var(--font-mono);">${t.id}</td>
+                    <td style="font-family:var(--font-mono); color:var(--text-dim);">${t.job_id}</td>
+                    <td><span class="continuous-platform-badge">${t.platform}</span></td>
+                    <td>${t.stage || '-'}</td>
+                    <td><span style="color:${statusColor}; font-weight:700;">${t.status}</span></td>
+                    <td style="color:var(--text-dim); font-size:11px;">${t.updated_at_fmt || ''}</td>
+                    <td style="color:var(--red); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(t.error || '')}">
+                      ${escapeHtml(t.error || '无')}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } else if (tabKey === 'auto') {
+        const auto = state.publisherData.automation_jobs || [];
+        container.innerHTML = `
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">云端监控定时发布计划 (automation_jobs)：</div>
+          <table class="pub-table">
+            <thead>
+              <tr>
+                <th>批次 ID</th>
+                <th>来源类型</th>
+                <th>计划发刊时间</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${auto.map(a => `
+                <tr>
+                  <td style="font-family:var(--font-mono); color:var(--cyan);">${a.job_id}</td>
+                  <td>${a.source_type}</td>
+                  <td>${a.publish_at_fmt || a.publish_at}</td>
+                  <td><span style="color:var(--amber); font-weight:700;">${a.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+
+    // 弹窗: 查看持续化任务运行日志
+    function openLogsModal(continuousTaskId) {
+      const task = state.continuousTasks.find(c => c.id === continuousTaskId);
+      if (!task) return;
+
+      document.getElementById("logsModalTitle").textContent = `📡 ${task.title} · 实时调度日志`;
+      const logs = task.logs || [];
+      const contentEl = document.getElementById("logsModalContent");
+
+      if (logs.length === 0) {
+        contentEl.innerHTML = `<div style="color:var(--text-dim);">暂无日志数据</div>`;
+      } else {
+        contentEl.innerHTML = logs.map(l => `
+          <div class="log-line">
+            <span class="log-time">[${l.time}]</span>
+            <span class="${l.level === 'SUCCESS' ? 'log-tag-success' : 'log-tag-info'}">${l.level}</span>
+            <span>${escapeHtml(l.msg)}</span>
+          </div>
+        `).join("");
+      }
+      document.getElementById("logsModal").classList.add("show");
+    }
+
+    function closeLogsModal() {
+      document.getElementById("logsModal").classList.remove("show");
+    }
+
+    // 弹窗: 回收站
+    async function openRecycleBinModal() {
+      const modal = document.getElementById("recycleModal");
+      const content = document.getElementById("recycleModalContent");
+      modal.classList.add("show");
+      content.innerHTML = "正在加载回收站...";
+
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/recycle_bin`);
+        const data = await resp.json();
+        const deleted = data.deleted_tasks || [];
+
+        if (deleted.length === 0) {
+          content.innerHTML = `<div style="text-align:center; color:var(--text-dim); padding:20px;">回收站当前为空</div>`;
+          return;
+        }
+
+        content.innerHTML = deleted.map(item => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div>
+              <div style="color:var(--text); font-size:13px;">${escapeHtml(item.title)}</div>
+              <div style="color:var(--text-dim); font-size:11px;">删除时间: ${item.deleted_at || '未知'}</div>
+            </div>
+            <button class="btn-view-logs" onclick="restoreTask('${item.id}')">恢复</button>
+          </div>
+        `).join("");
+      } catch (e) {
+        content.innerHTML = "加载失败: " + e;
+      }
+    }
+
+    async function restoreTask(taskId) {
+      await fetch(`${API_BASE}/api/v1/tasks/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId })
+      });
+      await fetchCockpitState();
+      openRecycleBinModal();
+    }
+
+    function closeRecycleModal() {
+      document.getElementById("recycleModal").classList.remove("show");
+    }
+
+    // 弹窗: 系统状态
+    function openSystemStatusModal() {
+      document.getElementById("systemStatusModal").classList.add("show");
+    }
+    function closeSystemStatusModal() {
+      document.getElementById("systemStatusModal").classList.remove("show");
+    }
+
+    // 快捷定位
+    function filterProjectOverview() {
+      const target = document.getElementById("pane-center");
+      target.scrollIntoView({ behavior: 'smooth' });
+      target.style.boxShadow = "0 0 30px var(--cyan)";
+      setTimeout(() => target.style.boxShadow = "", 1200);
+    }
+    function focusTodayTasks() {
+      const input = document.getElementById("cmdInput");
+      input.focus();
+      input.placeholder = "已就绪，请输入今日计划并按 Enter 存入...";
+    }
+
+    // 移动端 Tab 切换
+    function switchMobileTab(tabKey) {
+      document.querySelectorAll(".mobile-tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".mobile-view-pane").forEach(pane => pane.classList.remove("active"));
+
+      const targetPane = document.getElementById(`pane-${tabKey}`);
+      if (targetPane) targetPane.classList.add("active");
+
+      const btns = Array.from(document.querySelectorAll(".mobile-tab-btn"));
+      const match = btns.find(b => b.textContent.includes(tabKey === 'center' ? '项目全景' : (tabKey === 'right' ? '今日计划' : '昨日进展')));
+      if (match) match.classList.add("active");
+    }
+
+    function copyOrAlert(pathText) {
+      navigator.clipboard ? navigator.clipboard.writeText(pathText) : null;
+      showLightToast("路径已复制: " + pathText);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "auto-reminder": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "echo '{\"injectSteps\": []}'",
+        "timeout": 5
+      }
+    ]
+  }
+}
