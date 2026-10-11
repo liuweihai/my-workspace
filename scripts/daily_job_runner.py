@@ -104,7 +104,7 @@ class DailyTaskRunner:
 
         # 2. 存知识库
         print("正在归档到飞书知识库...")
-        sync_result = self.wiki_sync.save_markdown_to_wiki(title, content, notify=False)
+        sync_result = self.wiki_sync.save_markdown_to_wiki(title, content, category="自动化运行报告", notify=False)
         doc_url = sync_result.get("url", "")
 
         # 3. 专属机器人通知
