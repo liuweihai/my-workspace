@@ -210,13 +210,24 @@ class FeishuWikiSync:
                 "children": batch,
                 "index": -1
             }
-            res = requests.post(url, headers=headers, json=payload, timeout=15)
-            if res.status_code != 200:
-                print(f"写入文档内容失败: HTTP {res.status_code} -> {res.text}")
-            res.raise_for_status()
-            data = res.json()
-            if data.get("code") != 0:
-                raise RuntimeError(f"写入文档内容失败: {data.get('msg')}")
+            success = False
+            for attempt in range(3):
+                try:
+                    res = requests.post(url, headers=headers, json=payload, timeout=30)
+                    if res.status_code != 200:
+                        print(f"写入文档内容失败: HTTP {res.status_code} -> {res.text}")
+                    res.raise_for_status()
+                    data = res.json()
+                    if data.get("code") != 0:
+                        raise RuntimeError(f"写入文档内容失败: {data.get('msg')}")
+                    success = True
+                    break
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    print(f"网络波动超时，正在进行第 {attempt + 1} 次重试...")
+                    if attempt == 2:
+                        raise e
+            if not success:
+                raise RuntimeError("写入文档 block 超时失败")
 
     def send_notification(self, title: str, doc_url: str, category: str = "") -> bool:
         """向用户飞书发送文档沉淀通知"""
